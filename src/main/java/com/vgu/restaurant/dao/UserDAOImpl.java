@@ -1,0 +1,175 @@
+package com.vgu.restaurant.dao;
+
+import com.vgu.restaurant.dao.DBConnection;
+import com.vgu.restaurant.model.Customer;
+import com.vgu.restaurant.model.Employee;
+import com.vgu.restaurant.model.Role;
+import com.vgu.restaurant.model.User;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class UserDAOImpl implements UserDAO {
+
+    @Override
+    public boolean add(User user) {
+        String sql = "INSERT INTO users (username, password, fullName, role, phone) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                System.out.println("addUser: DB Connection is null");
+                return false;
+            }
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, user.getUsername());
+            ps.setString(2, user.getPassword());
+            ps.setString(3, user.getFullName());
+            ps.setString(4, user.getRole().toString());
+            ps.setString(5, user.getPhone());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            System.out.println("addUser error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean update(User user) {
+        String sql = "UPDATE users SET password=?, fullName=?, role=?, phone=? WHERE id=?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                System.out.println("updateUser: DB Connection is null");
+                return false;
+            }
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, user.getPassword());
+            ps.setString(2, user.getFullName());
+            ps.setString(3, user.getRole().name());
+            ps.setString(4, user.getPhone());
+            ps.setInt(5, user.getId());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            System.out.println("update(User) error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean delete(User user) {
+        String sql = "DELETE FROM users WHERE id=?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                System.out.println("deleteUser: DB Connection is null");
+                return false;
+            }
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, user.getId());
+
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("delete(User) error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public User getById(int id) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                System.out.println("getUserById: DB Connection is null");
+                return null;
+            }
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return extractUser(rs);
+            }
+        } catch (Exception e) {
+            System.out.println("getUserById error: " + e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public User getByUsername(String username) {
+        String sql = "SELECT * FROM users WHERE username = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                System.out.println("getUserByUsername: DB Connection is null");
+                return null;
+            }
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, username);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return extractUser(rs);
+            }
+        } catch (Exception e) {
+            System.out.println("getUserByUsername error: " + e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public List<User> getAll() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT * FROM users";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                System.out.println("getAllUsers: DB Connection is null");
+                return list;
+            }
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                list.add(extractUser(rs));
+            }
+        } catch (Exception e) {
+            System.out.println("getAllUsers error: " + e.getMessage());
+        }
+        return list;
+    }
+
+    private User extractUser(ResultSet rs) throws SQLException {
+        Role role = Role.valueOf(rs.getString("role"));
+
+        if (role == Role.CUSTOMER) {
+            return new Customer(
+                    rs.getInt("id"),
+                    rs.getString("username"),
+                    rs.getString("password"),
+                    rs.getString("fullName"),
+                    rs.getString("phone")
+            );
+        }
+
+        return new Employee(
+                rs.getInt("id"),
+                rs.getString("username"),
+                rs.getString("password"),
+                rs.getString("fullName"),
+                role,
+                rs.getString("phone")
+        );
+    }
+}
