@@ -13,13 +13,16 @@ public abstract class User {
     // CONSTRUCTOR
     public User() {}
 
-    public User(int id, String username, String password, String fullName, Role role, String phone) {
-        this.id = id;
+    public User(String username, String password, String fullName, Role role, String phone) {
         this.username = username;
         this.password = password;
         this.fullName = fullName;
         this.role = role;
         this.phone = phone;
+    }
+    public User(int id, String username){
+        this.id = id;
+        this.username = username;
     }
 
     // GETTER, SETTER
