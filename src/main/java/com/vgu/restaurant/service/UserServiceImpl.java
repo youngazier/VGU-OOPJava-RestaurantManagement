@@ -7,7 +7,8 @@ import com.vgu.restaurant.model.User;
 import java.util.List;
 
 public class UserServiceImpl implements UserService {
-    private final   UserDAO userDAO = new UserDAOImpl();
+
+    private final   UserDAO userDAO = UserDAOImpl.getInstance();
 
     @Override
     public boolean register(User user) {
@@ -21,6 +22,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User login(String username, String password) {
+
+        if (isBlank(username) || isBlank(password)) return null;
+
         User dbUser = userDAO.getByUsername(username);
 
         if (dbUser == null) {
@@ -45,4 +49,15 @@ public class UserServiceImpl implements UserService {
         return userDAO.getAll();
     }
 
+    private boolean isValid(User user) {
+        return user != null
+                && !isBlank(user.getUsername())
+                && !isBlank(user.getPassword())
+                && !isBlank(user.getFullName())
+                && user.getRole() != null;
+    }
+
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
 }

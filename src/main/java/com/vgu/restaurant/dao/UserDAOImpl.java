@@ -12,6 +12,17 @@ import java.util.List;
 
 public class UserDAOImpl implements UserDAO {
 
+    // Singleton Pattern
+    private static UserDAOImpl instance;
+    private UserDAOImpl() {}
+
+    public static UserDAOImpl getInstance() {
+        if (instance == null) {
+            instance = new UserDAOImpl();
+        }
+        return instance;
+    }
+
     @Override
     public boolean add(User user) {
         String sql = "INSERT INTO users (username, password, fullName, role, phone) VALUES (?, ?, ?, ?, ?)";
@@ -151,25 +162,17 @@ public class UserDAOImpl implements UserDAO {
     }
 
     private User extractUser(ResultSet rs) throws SQLException {
+        int id = rs.getInt("id");
+        String username = rs.getString("username");
+        String password = rs.getString("password");
+        String fullName = rs.getString("fullName");
+        String phone = rs.getString("phone");
         Role role = Role.valueOf(rs.getString("role"));
 
         if (role == Role.CUSTOMER) {
-            return new Customer(
-                    rs.getInt("id"),
-                    rs.getString("username"),
-                    rs.getString("password"),
-                    rs.getString("fullName"),
-                    rs.getString("phone")
-            );
+            return new Customer(id, username, password, fullName, phone);
         }
 
-        return new Employee(
-                rs.getInt("id"),
-                rs.getString("username"),
-                rs.getString("password"),
-                rs.getString("fullName"),
-                role,
-                rs.getString("phone")
-        );
+        return new Employee(id, username, password, fullName, role, phone);
     }
 }

@@ -13,8 +13,18 @@ public abstract class User {
     // CONSTRUCTOR
     public User() {}
 
+    // Use for retrieving from DB
     public User(int id, String username, String password, String fullName, Role role, String phone) {
         this.id = id;
+        this.username = username;
+        this.password = password;
+        this.fullName = fullName;
+        this.role = role;
+        this.phone = phone;
+    }
+
+    // Use for initialize a new obj
+    public User(String username, String password, String fullName, Role role, String phone) {
         this.username = username;
         this.password = password;
         this.fullName = fullName;
