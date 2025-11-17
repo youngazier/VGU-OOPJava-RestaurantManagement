@@ -12,8 +12,19 @@ public class MenuItem {
 
     //CONSTRUCTOR
     public MenuItem() {}
+
     public MenuItem(int id, String name, String description, String imgUrl, double cost, double price, String category, boolean isAvailable) {
         this.id = id;
+        this.name = name;
+        this.description = description;
+        this.imgUrl = imgUrl;
+        this.cost = cost;
+        this.price = price;
+        this.category = category;
+        this.isAvailable = isAvailable;
+    }
+
+    public MenuItem(String name, String description, String imgUrl, double cost, double price, String category, boolean isAvailable) {
         this.name = name;
         this.description = description;
         this.imgUrl = imgUrl;

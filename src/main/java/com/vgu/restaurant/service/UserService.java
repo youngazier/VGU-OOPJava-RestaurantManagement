@@ -2,10 +2,11 @@ package com.vgu.restaurant.service;
 
 import com.vgu.restaurant.model.User;
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
     boolean register(User user);
     User login(String username, String password);
-    User getById(int id);
+    Optional<User> getById(int id);
     List<User> getAll();
 }

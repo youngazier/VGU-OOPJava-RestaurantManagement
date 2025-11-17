@@ -23,7 +23,7 @@ public abstract class User {
         this.phone = phone;
     }
 
-    // Use for initialize a new obj
+    // Use for initializing a new obj
     public User(String username, String password, String fullName, Role role, String phone) {
         this.username = username;
         this.password = password;

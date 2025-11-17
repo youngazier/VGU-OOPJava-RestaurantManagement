@@ -1,11 +1,12 @@
 package com.vgu.restaurant.dao;
 
-import com.vgu.restaurant.dao.DBConnection;
 import com.vgu.restaurant.model.MenuItem;
+import com.vgu.restaurant.model.Order;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class MenuItemDAOImpl implements MenuItemDAO {
 
@@ -16,7 +17,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
                 System.out.println("addMenuItem: DB connection is null");
                 return false;
             }
-            PreparedStatement ps = conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, item.getName());
             ps.setString(2, item.getDescription());
             ps.setString(3, item.getImgUrl());
@@ -61,7 +62,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
     }
 
 
-    public boolean delete(MenuItem item) {
+    public boolean delete(Optional<Order> item) {
         String sql = "DELETE FROM MenuItem WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection()) {
@@ -81,7 +82,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
     }
 
 
-    public MenuItem getById(int id) {
+    public Optional<MenuItem> getById(int id) {
         String sql = "SELECT * FROM MenuItem WHERE id=?";
         try (Connection conn = DBConnection.getConnection()) {
             if (conn == null) {
@@ -94,7 +95,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return null;
+                return Optional.of(map(rs));
             }
         } catch (Exception e) {
             System.out.println("getMenuItemById error: " + e.getMessage());
@@ -117,7 +118,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                list.add(null);
+                list.add(map(rs));
             }
         } catch (Exception e) {
             System.out.println("getAllMenuItem error: " + e.getMessage());
@@ -127,26 +128,33 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
 
     public List<MenuItem> getByCategory(String category) {
+        List<MenuItem> list = new ArrayList<>();
         String sql = "SELECT * FROM MenuItem WHERE category = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
             if (conn == null) {
-                System.out.println("getMenuItembycategory: DB Connection is null");
-                return null;
+                System.out.println("getByCategory: DB Connection is null");
+                return list; // trả về list rỗng thay vì null
             }
 
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, category);
 
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return null;
+
+            // Duyệt tất cả kết quả
+            while (rs.next()) {
+                list.add(map(rs));   // thêm MenuItem vào list
             }
+
         } catch (Exception e) {
-            System.out.println("getMenuItembycategory error: " + e.getMessage());
+            System.out.println("getByCategory error: " + e.getMessage());
         }
-        return null;
+
+        return list; // luôn trả về list (không bao giờ return null)
     }
+
+
     public List<MenuItem> getAvailableItems(boolean IsAvailable) {
         String sql = "SELECT * FROM MenuItem WHERE IsAvailable =?";
         try (Connection conn = DBConnection.getConnection()) {
@@ -166,5 +174,18 @@ public class MenuItemDAOImpl implements MenuItemDAO {
             System.out.println("getMenuItembyIsAvailable error: " + e.getMessage());
         }
         return null;
+    }
+
+    private MenuItem map(ResultSet rs) throws Exception {
+        return new MenuItem(
+                rs.getInt("id"),
+                rs.getString("name"),
+                rs.getString("description"),
+                rs.getString("imgUrl"),
+                rs.getDouble("cost"),
+                rs.getDouble("price"),
+                rs.getString("category"),
+                rs.getBoolean("isAvailable")
+        );
     }
 }

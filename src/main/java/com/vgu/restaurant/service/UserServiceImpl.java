@@ -5,6 +5,7 @@ import com.vgu.restaurant.dao.UserDAOImpl;
 import com.vgu.restaurant.model.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public class UserServiceImpl implements UserService {
 
@@ -40,7 +41,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getById(int id) {
+    public Optional<User> getById(int id) {
         return userDAO.getById(id);
     }
 
