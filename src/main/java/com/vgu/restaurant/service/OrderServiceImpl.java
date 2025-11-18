@@ -50,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public boolean delete(int orderId) {
         Optional<Order> order = orderDAO.getById(orderId);
-        if (order == null) return false;
-        return orderDAO.delete(order);
+        if (order.isEmpty()) return false;
+        return orderDAO.delete(order.get());
     }
 }

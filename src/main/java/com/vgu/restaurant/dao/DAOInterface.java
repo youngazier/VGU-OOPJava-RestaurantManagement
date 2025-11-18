@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface DAOInterface<T> {
     boolean add(T t);
     boolean update(T t);
-    boolean delete(Optional<Order> t);
+    boolean delete(T t);
     Optional<T> getById(int id);
     List<T> getAll();
 }

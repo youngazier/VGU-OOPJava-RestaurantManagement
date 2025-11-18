@@ -172,7 +172,7 @@ public class OrderDAOImpl implements OrderDAO {
     }
 
     @Override
-    public boolean delete(Optional<Order> order) {
+    public boolean delete(Order order) {
 
         String deleteItems = "DELETE FROM order_items WHERE orderId = ?";
         String deleteOrder = "DELETE FROM orders WHERE id = ?";

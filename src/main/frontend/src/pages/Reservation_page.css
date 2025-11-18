@@ -1,0 +1,71 @@
+.page-reservation{
+    display: flex;
+    flex-direction: column;
+}
+.heading{
+    justify-content: center;
+}
+.reservation-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    padding: 18px;
+}
+
+.card{
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.fullwidth{grid-column: 1 / -1}
+
+.note-card{
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+}
+
+.field-label{
+    min-width:72px;
+    padding: 12px 10px;
+    margin: 0;
+    font-weight:700;
+    background-color: #fff;
+    border-radius:6px;
+    text-align:center;
+}
+.note-field-label{
+    min-width:72px;
+    padding: 12px 10px;
+    text-align:left;
+    font-weight:700;
+    background-color: #fff;
+    border-radius:6px;
+}
+
+.field-control{flex:1}
+
+.select,.input,.textarea,.number-input{
+    width:100%;
+    padding:12px 14px;
+    border-radius:8px;
+    border:1px solid #eee;
+    background:#fff;
+    box-sizing: border-box;
+}
+
+.textarea{min-height:100px;resize:vertical}
+
+@media (max-width: 640px){
+  .reservation-grid{grid-template-columns:1fr}
+  .card{align-items:flex-start}
+  .field-label{text-align:left}
+}

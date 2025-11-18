@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public class MenuItemDAOImpl implements MenuItemDAO {
 
+    @Override
     public boolean add(MenuItem item){
         String sql = "INSERT INTO MenuItem (name, description, imgUrl, cost, price, category, isAvailable) " + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection()){
@@ -34,7 +35,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
         }
     }
 
-
+    @Override
     public boolean update(MenuItem item) {
         String sql = "UPDATE MenuItem SET name=?, description=?, imgUrl=?, cost=?, price=?, category=?, isAvailable=? WHERE id=?";
 
@@ -61,8 +62,8 @@ public class MenuItemDAOImpl implements MenuItemDAO {
         }
     }
 
-
-    public boolean delete(Optional<Order> item) {
+    @Override
+    public boolean delete(MenuItem item) {
         String sql = "DELETE FROM MenuItem WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection()) {

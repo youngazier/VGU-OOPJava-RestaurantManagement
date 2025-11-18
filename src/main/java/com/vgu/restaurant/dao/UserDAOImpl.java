@@ -70,7 +70,7 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public boolean delete(Optional<Order> user) {
+    public boolean delete(User user) {
         String sql = "DELETE FROM users WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection()) {
@@ -104,7 +104,7 @@ public class UserDAOImpl implements UserDAO {
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return map(rs);
+                return Optional.of(map(rs));
             }
         } catch (Exception e) {
             System.out.println("getUserById error: " + e.getMessage());

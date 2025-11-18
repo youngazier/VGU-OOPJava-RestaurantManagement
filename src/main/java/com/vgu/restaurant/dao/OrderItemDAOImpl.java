@@ -81,7 +81,7 @@ public class OrderItemDAOImpl implements OrderItemDAO {
     }
 
     @Override
-    public boolean delete(Optional<Order> item) {
+    public boolean delete(OrderItem item) {
         String sql = "DELETE FROM order_items WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
