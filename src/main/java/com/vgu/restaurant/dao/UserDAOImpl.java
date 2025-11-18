@@ -1,14 +1,11 @@
 package com.vgu.restaurant.dao;
 
-import com.vgu.restaurant.dao.DBConnection;
-import com.vgu.restaurant.model.Customer;
-import com.vgu.restaurant.model.Employee;
-import com.vgu.restaurant.model.Role;
-import com.vgu.restaurant.model.User;
+import com.vgu.restaurant.model.*;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class UserDAOImpl implements UserDAO {
 
@@ -32,7 +29,7 @@ public class UserDAOImpl implements UserDAO {
                 return false;
             }
 
-            PreparedStatement ps = conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPassword());
             ps.setString(3, user.getFullName());
@@ -73,7 +70,7 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public boolean delete(User user) {
+    public boolean delete(Optional<Order> user) {
         String sql = "DELETE FROM users WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection()) {
@@ -93,7 +90,7 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public User getById(int id) {
+    public Optional<User> getById(int id) {
         String sql = "SELECT * FROM users WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
@@ -107,7 +104,7 @@ public class UserDAOImpl implements UserDAO {
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return extractUser(rs);
+                return map(rs);
             }
         } catch (Exception e) {
             System.out.println("getUserById error: " + e.getMessage());
@@ -130,7 +127,7 @@ public class UserDAOImpl implements UserDAO {
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return extractUser(rs);
+                return map(rs);
             }
         } catch (Exception e) {
             System.out.println("getUserByUsername error: " + e.getMessage());
@@ -153,7 +150,7 @@ public class UserDAOImpl implements UserDAO {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                list.add(extractUser(rs));
+                list.add(map(rs));
             }
         } catch (Exception e) {
             System.out.println("getAllUsers error: " + e.getMessage());
@@ -161,7 +158,7 @@ public class UserDAOImpl implements UserDAO {
         return list;
     }
 
-    private User extractUser(ResultSet rs) throws SQLException {
+    private User map(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
         String username = rs.getString("username");
         String password = rs.getString("password");
