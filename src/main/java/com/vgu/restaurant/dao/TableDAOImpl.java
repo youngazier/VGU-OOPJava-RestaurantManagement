@@ -1,16 +1,20 @@
 package com.vgu.restaurant.dao;
 
 import com.vgu.restaurant.model.Table;
+import com.vgu.restaurant.model.TableStatus;
 
 import java.sql.Connection;
+import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class TableDAOImpl implements TableDAO{
+public class TableDAOImpl implements TableDAO {
+
     private static TableDAOImpl instance;
+
     private TableDAOImpl() {}
 
     public static TableDAOImpl getInstance() {
@@ -22,15 +26,23 @@ public class TableDAOImpl implements TableDAO{
 
     @Override
     public boolean add(Table table) {
-        String sql = "INSERT INTO order_items (capacity,status) VALUES (?, ?)";
+        String sql = "INSERT INTO tables (capacity,status) VALUES (?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, table.getCapacity());
-            ps.setString(2, table.getTableStatus().name());
+            ps.setString(2, table.getStatus().name());
 
-            return ps.executeUpdate() > 0;
+            int affected = ps.executeUpdate();
+            if (affected == 0) return false;
+
+            try (ResultSet key = ps.getGeneratedKeys()) {
+                if (key.next()) {
+                    table.setId(key.getInt(1));
+                }
+            }
+            return true;
 
         } catch (Exception e) {
             System.out.println("addTable error: " + e.getMessage());
@@ -39,33 +51,15 @@ public class TableDAOImpl implements TableDAO{
     }
 
     @Override
-    public boolean updateStatus(int tableId, TableStatus newStatus) {
-        String sql = "UPDATE orders SET status = ? WHERE id = ?";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, newStatus.name());
-            ps.setInt(2, tableId);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            System.out.println("updateStatus error: " + e.getMessage());
-            return false;
-        }
-        return false;
-    }
-
-    @Override
     public boolean update(Table table) {
-        String sql = "UPDATE orders SET capacity=?, status=? WHERE id=?";
+        String sql = "UPDATE tables SET capacity = ?, status = ? WHERE id = ? ";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, table.getCapacity());
             ps.setString(2, table.getStatus().name());
+            ps.setInt(3, table.getId());
 
             return ps.executeUpdate() > 0;
 
@@ -75,10 +69,26 @@ public class TableDAOImpl implements TableDAO{
         }
     }
 
+    @Override
+    public boolean updateStatus(int tableId, TableStatus newStatus) {
+        String sql = "UPDATE tables SET status = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newStatus.name());
+            ps.setInt(2, tableId);
+
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("updateStatus error: " + e.getMessage());
+            return false;
+        }
+    }
 
     @Override
-    public boolean delete(Optional<Table> table) {
-        String sql = "DELETE FROM table WHERE id = ?";
+    public boolean delete(Table table) {
+        String sql = "DELETE FROM tables WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -94,26 +104,51 @@ public class TableDAOImpl implements TableDAO{
 
     @Override
     public Optional<Table> getById(int id) {
-        String sql = "SELECT * FROM order_items WHERE id = ?";
+        String sql = "SELECT * FROM tables WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
 
-            if (rs.next()) return Optional.of(map(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                return Optional.of(map(rs));
+            }
 
         } catch (Exception e) {
             System.out.println("getTableById error: " + e.getMessage());
+            return Optional.empty();
         }
-        return null;
+    }
+
+    @Override
+    public List<Table> getByStatus(TableStatus status) {
+        List<Table> list = new ArrayList<>();
+        String sql = "SELECT * FROM tables WHERE status = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, status.name());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("getTableByStatus error: " + e.getMessage());
+        }
+
+        return list;
     }
 
     @Override
     public List<Table> getAll() {
         List<Table> list = new ArrayList<>();
-        String sql = "SELECT * FROM order_items";
+        String sql = "SELECT * FROM tables";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -135,10 +170,4 @@ public class TableDAOImpl implements TableDAO{
                 TableStatus.valueOf(rs.getString("status"))
         );
     }
-}
-
-
-
-
-
 }

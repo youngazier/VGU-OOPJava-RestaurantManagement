@@ -24,7 +24,7 @@ public class OrderItemDAOImpl implements OrderItemDAO {
         String sql = "INSERT INTO order_items (orderId, menuItemId, price, quantity, note) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, item.getOrderId());
             ps.setInt(2, item.getMenuItemId());
@@ -49,16 +49,17 @@ public class OrderItemDAOImpl implements OrderItemDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, orderId);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) list.add(map(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
 
         } catch (Exception e) {
             System.out.println("getOrderItemsByOrderId error: " + e.getMessage());
+            return new ArrayList<>();
         }
         return list;
     }
-
+    
     @Override
     public boolean update(OrderItem item) {
         String sql = "UPDATE order_items SET menuItemId=?, price=?, quantity=?, note=? WHERE id=?";
@@ -104,14 +105,16 @@ public class OrderItemDAOImpl implements OrderItemDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
 
-            if (rs.next()) return Optional.of(map(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                return Optional.of(map(rs));
+            }
 
         } catch (Exception e) {
             System.out.println("getOrderItemById error: " + e.getMessage());
+            return Optional.empty();
         }
-        return null;
     }
 
     @Override

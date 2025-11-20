@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderDAO extends DAOInterface<Order> {
-    List<Order> findByCustomer(int customerId);
-    List<Order> findByStatus(OrderStatus status);
+    List<Order> getByCustomer(int customerId);
+    List<Order> getByStatus(OrderStatus status);
     boolean updateStatus(int orderId, OrderStatus newStatus);
 }

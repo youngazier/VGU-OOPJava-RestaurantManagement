@@ -10,12 +10,11 @@ public interface TableService {
     boolean create(Table table);
 
     Optional<Table> getById(int id);
-
+    List<Table> getByStatus(TableStatus status);
     List<Table> getAll();
 
-    boolean updateStatus(int tableId, TableStatus status);
-
     boolean update(Table table);
+    boolean updateStatus(int tableId, TableStatus status);
 
     boolean delete(int tableId);
 }

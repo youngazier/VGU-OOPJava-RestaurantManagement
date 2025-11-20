@@ -1,20 +1,17 @@
 package com.vgu.restaurant.controller;
 
 import com.google.gson.Gson;
-import com.vgu.restaurant.model.*;
+import com.vgu.restaurant.model.Order;
+import com.vgu.restaurant.model.OrderItem;
+import com.vgu.restaurant.model.OrderStatus;
 import com.vgu.restaurant.service.OrderService;
 import com.vgu.restaurant.service.OrderServiceImpl;
 
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
+import jakarta.servlet.http.*;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @WebServlet("/api/orders/*")
 public class OrderController extends HttpServlet {
@@ -22,133 +19,105 @@ public class OrderController extends HttpServlet {
     private final OrderService orderService = new OrderServiceImpl();
     private final Gson gson = new Gson();
 
-    // DTO cho request create/update
-    private static class OrderRequest {
-        int tableId;
-        Integer customerId;
-        List<OrderItem> items;
-        String status;
-        LocalDateTime createdAt;
-        String note;
-    }
-
-    private static class StatusRequest {
-        String status;
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         resp.setContentType("application/json");
-        String path = req.getPathInfo(); // / , /{id}
+        String path = req.getPathInfo();
 
+        // GET /api/orders
         if (path == null || path.equals("/")) {
-            List<Order> list = orderService.getAll();
-            resp.getWriter().write(gson.toJson(list));
+            resp.getWriter().write(gson.toJson(orderService.getAll()));
             return;
         }
 
-        // /{id}
+        // GET /api/orders/{id}
         try {
             int id = Integer.parseInt(path.substring(1));
-            Optional<Order> order = orderService.getById(id);
+            var order = orderService.getById(id);
 
-            if (order == null) {
-                resp.setStatus(404);
-                resp.getWriter().write("{\"error\":\"Order not found\"}");
-                return;
-            }
-
-            resp.getWriter().write(gson.toJson(order));
+            if (order.isPresent()) resp.getWriter().write(gson.toJson(order.get()));
+            else resp.getWriter().write("{\"error\":\"Not found\"}");
 
         } catch (Exception e) {
-            resp.setStatus(400);
-            resp.getWriter().write("{\"error\":\"Invalid order ID\"}");
+            resp.getWriter().write("{\"error\":\"Invalid ID\"}");
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String path = req.getPathInfo();
 
-        resp.setContentType("application/json");
+        // POST /api/orders → Tạo order mới
+        if (path == null || path.equals("/")) {
+            BufferedReader reader = req.getReader();
+            Order order = gson.fromJson(reader, Order.class);
 
-        BufferedReader reader = req.getReader();
-        OrderRequest body = gson.fromJson(reader, OrderRequest.class);
-
-        Order order = new Order(
-                body.tableId,
-                body.customerId,
-                body.items,
-                OrderStatus.valueOf(body.status),
-                body.createdAt,
-                body.note
-        );
-
-        boolean ok = orderService.create(order);
-        if (!ok) {
-            resp.setStatus(500);
-            resp.getWriter().write("{\"error\":\"Failed to create order\"}");
+            boolean success = orderService.create(order);
+            resp.getWriter().write("{\"success\":" + success + "}");
             return;
         }
 
-        resp.getWriter().write("{\"message\":\"Order created successfully\"}");
+        // POST /api/orders/{id}/items → thêm món
+        if (path.matches("/\\d+/items")) {
+            int orderId = Integer.parseInt(path.split("/")[1]);
+
+            BufferedReader reader = req.getReader();
+            OrderItem item = gson.fromJson(reader, OrderItem.class);
+
+            boolean success = orderService.addItem(item.getOrderId(), item);
+            resp.getWriter().write("{\"success\":" + success + "}");
+            return;
+        }
+
+        resp.getWriter().write("{\"error\":\"Invalid POST endpoint\"}");
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
-        resp.setContentType("application/json");
-        String path = req.getPathInfo(); // /{id}/status
+        String path = req.getPathInfo();
 
-        if (path == null || !path.matches("^/\\d+/status$")) {
-            resp.setStatus(400);
-            resp.getWriter().write("{\"error\":\"Invalid endpoint\"}");
+        // PUT /api/orders/{itemId}/quantity
+        if (path.matches("/\\d+/quantity")) {
+            int itemId = Integer.parseInt(path.split("/")[1]);
+
+            Map data = gson.fromJson(req.getReader(), Map.class);
+            int qty = ((Double) data.get("quantity")).intValue();
+
+            boolean success = orderService.updateItemQuantity(itemId, qty);
+            resp.getWriter().write("{\"success\":" + success + "}");
             return;
         }
 
-        int id = Integer.parseInt(path.split("/")[1]);
+        // PUT /api/orders/{id}/status
+        if (path.matches("/\\d+/status")) {
+            int orderId = Integer.parseInt(path.split("/")[1]);
 
-        BufferedReader reader = req.getReader();
-        StatusRequest body = gson.fromJson(reader, StatusRequest.class);
+            Map data = gson.fromJson(req.getReader(), Map.class);
+            OrderStatus newStatus = OrderStatus.valueOf((String) data.get("status"));
 
-        boolean ok = orderService.updateStatus(id, OrderStatus.valueOf(body.status));
-
-        if (!ok) {
-            resp.setStatus(500);
-            resp.getWriter().write("{\"error\":\"Failed to update status\"}");
+            boolean success = orderService.updateStatus(orderId, newStatus);
+            resp.getWriter().write("{\"success\":" + success + "}");
             return;
         }
 
-        resp.getWriter().write("{\"message\":\"Status updated successfully\"}");
+        resp.getWriter().write("{\"error\":\"Invalid PUT endpoint\"}");
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
-        resp.setContentType("application/json");
-        String path = req.getPathInfo(); // /{id}
+        String path = req.getPathInfo();
 
-        if (path == null || path.equals("/")) {
-            resp.setStatus(400);
-            resp.getWriter().write("{\"error\":\"Missing order ID\"}");
+        // DELETE /api/orders/items/{id}
+        if (path.startsWith("/items/")) {
+            int itemId = Integer.parseInt(path.substring(7));
+            boolean success = orderService.removeItem(itemId);
+            resp.getWriter().write("{\"success\":" + success + "}");
             return;
         }
 
-        try {
-            int id = Integer.parseInt(path.substring(1));
-
-            boolean ok = orderService.delete(id);
-            if (!ok) {
-                resp.setStatus(404);
-                resp.getWriter().write("{\"error\":\"Order not found / cannot delete\"}");
-                return;
-            }
-
-            resp.getWriter().write("{\"message\":\"Order deleted successfully\"}");
-
-        } catch (Exception e) {
-            resp.setStatus(400);
-            resp.getWriter().write("{\"error\":\"Invalid order ID\"}");
-        }
+        resp.getWriter().write("{\"error\":\"Invalid DELETE endpoint\"}");
     }
 }

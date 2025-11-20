@@ -9,12 +9,12 @@ import java.util.Optional;
 
 public class UserServiceImpl implements UserService {
 
-    private final   UserDAO userDAO = UserDAOImpl.getInstance();
+    private final UserDAO userDAO = UserDAOImpl.getInstance();
 
     @Override
     public boolean register(User user) {
         // Check trung username
-        if (userDAO.getByUsername(user.getUsername()) != null) {
+        if (userDAO.getByUsername(user.getUsername()).isPresent()) {
             System.out.println("Username is already in use");
             return false;
         }
@@ -22,20 +22,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User login(String username, String password) {
+    public Optional<User> login(String username, String password) {
 
-        if (isBlank(username) || isBlank(password)) return null;
+        if (isBlank(username) || isBlank(password)) return Optional.empty();
 
-        User dbUser = userDAO.getByUsername(username);
+        Optional<User> dbUser = userDAO.getByUsername(username);
 
-        if (dbUser == null) {
+        if (dbUser.isEmpty()) {
             System.out.println("Username not found");
-            return null;
+            return Optional.empty();
         }
 
-        if (!dbUser.getPassword().equals(password)) {
+        if (!dbUser.get().getPassword().equals(password)) {
             System.out.println("Wrong password");
-            return null;
+            return Optional.empty();
         }
         return dbUser;
     }

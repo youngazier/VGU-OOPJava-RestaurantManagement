@@ -10,14 +10,26 @@ import java.util.Optional;
 
 public class MenuItemDAOImpl implements MenuItemDAO {
 
+    private static MenuItemDAOImpl instance;
+    private MenuItemDAOImpl() {}
+
+    public static MenuItemDAOImpl getInstance() {
+        if (instance == null) {
+            instance = new MenuItemDAOImpl();
+        }
+        return instance;
+    }
+
     @Override
     public boolean add(MenuItem item){
         String sql = "INSERT INTO MenuItem (name, description, imgUrl, cost, price, category, isAvailable) " + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
         try (Connection conn = DBConnection.getConnection()){
             if (conn == null){
                 System.out.println("addMenuItem: DB connection is null");
                 return false;
             }
+
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, item.getName());
             ps.setString(2, item.getDescription());
@@ -27,7 +39,15 @@ public class MenuItemDAOImpl implements MenuItemDAO {
             ps.setString(6, item.getCategory());
             ps.setBoolean(7, item.isAvailable());
 
-            return ps.executeUpdate() > 0;
+            int affected = ps.executeUpdate();
+            if (affected == 0) return false;
+
+            try (ResultSet key = ps.getGeneratedKeys()) {
+                if (key.next()) {
+                    item.setId(key.getInt(1));
+                }
+            }
+            return true;
 
         } catch (Exception e) {
             System.out.println("addMenuItem error: " + e.getMessage());
@@ -39,13 +59,13 @@ public class MenuItemDAOImpl implements MenuItemDAO {
     public boolean update(MenuItem item) {
         String sql = "UPDATE MenuItem SET name=?, description=?, imgUrl=?, cost=?, price=?, category=?, isAvailable=? WHERE id=?";
 
-        try (Connection conn = DBConnection.getConnection()) {
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             if (conn == null) {
                 System.out.println("updateMenuItem: DB Connection is null");
                 return false;
             }
 
-            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, item.getName());
             ps.setString(2, item.getDescription());
             ps.setString(3, item.getImgUrl());
@@ -66,16 +86,17 @@ public class MenuItemDAOImpl implements MenuItemDAO {
     public boolean delete(MenuItem item) {
         String sql = "DELETE FROM MenuItem WHERE id=?";
 
-        try (Connection conn = DBConnection.getConnection()) {
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             if (conn == null) {
                 System.out.println("deleteUser: DB Connection is null");
                 return false;
             }
 
-            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, item.getId());
 
             return ps.executeUpdate() > 0;
+
         } catch (Exception e) {
             System.out.println("delete(MenuItem) error: " + e.getMessage());
             return false;
@@ -85,23 +106,23 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
     public Optional<MenuItem> getById(int id) {
         String sql = "SELECT * FROM MenuItem WHERE id=?";
-        try (Connection conn = DBConnection.getConnection()) {
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             if (conn == null) {
                 System.out.println("getMenuItemById: DB Connection is null");
-                return null;
+                return Optional.empty();
             }
 
-            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
 
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return Optional.of(map(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return Optional.of(map(rs));
             }
+
         } catch (Exception e) {
             System.out.println("getMenuItemById error: " + e.getMessage());
         }
-        return null;
+        return Optional.empty();
     }
 
 
@@ -126,7 +147,6 @@ public class MenuItemDAOImpl implements MenuItemDAO {
         }
         return list;
     }
-
 
     public List<MenuItem> getByCategory(String category) {
         List<MenuItem> list = new ArrayList<>();
@@ -155,7 +175,6 @@ public class MenuItemDAOImpl implements MenuItemDAO {
         return list; // luôn trả về list (không bao giờ return null)
     }
 
-
     public List<MenuItem> getAvailableItems(boolean IsAvailable) {
         String sql = "SELECT * FROM MenuItem WHERE IsAvailable =?";
         try (Connection conn = DBConnection.getConnection()) {
@@ -175,6 +194,23 @@ public class MenuItemDAOImpl implements MenuItemDAO {
             System.out.println("getMenuItembyIsAvailable error: " + e.getMessage());
         }
         return null;
+    }
+
+    public boolean setAvailability(int id, boolean available) {
+        String sql = "UPDATE MenuItem SET isAvailable = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setBoolean(1, available);
+            ps.setInt(2, id);
+            
+            return ps.executeUpdate() > 0;
+        
+        }
+        catch (Exception e) {
+            System.out.println("setAvailability error: " + e.getMessage());
+            return false;
+        }
     }
 
     private MenuItem map(ResultSet rs) throws Exception {

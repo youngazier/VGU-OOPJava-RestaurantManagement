@@ -23,6 +23,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean add(User user) {
         String sql = "INSERT INTO users (username, password, fullName, role, phone) VALUES (?, ?, ?, ?, ?)";
+
         try (Connection conn = DBConnection.getConnection()) {
             if (conn == null) {
                 System.out.println("addUser: DB Connection is null");
@@ -36,7 +37,16 @@ public class UserDAOImpl implements UserDAO {
             ps.setString(4, user.getRole().toString());
             ps.setString(5, user.getPhone());
 
-            return ps.executeUpdate() > 0;
+            int affected = ps.executeUpdate();
+            if (affected == 0) return false;
+
+            // Lấy id từ DB
+            try (ResultSet key = ps.getGeneratedKeys()) {
+                if (key.next()) {
+                    user.setId(key.getInt(1));
+                }
+            }
+            return true;
 
         } catch (Exception e) {
             System.out.println("addUser error: " + e.getMessage());
@@ -48,13 +58,13 @@ public class UserDAOImpl implements UserDAO {
     public boolean update(User user) {
         String sql = "UPDATE users SET password=?, fullName=?, role=?, phone=? WHERE id=?";
 
-        try (Connection conn = DBConnection.getConnection()) {
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             if (conn == null) {
                 System.out.println("updateUser: DB Connection is null");
                 return false;
             }
 
-            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, user.getPassword());
             ps.setString(2, user.getFullName());
             ps.setString(3, user.getRole().name());
@@ -73,16 +83,17 @@ public class UserDAOImpl implements UserDAO {
     public boolean delete(User user) {
         String sql = "DELETE FROM users WHERE id=?";
 
-        try (Connection conn = DBConnection.getConnection()) {
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             if (conn == null) {
                 System.out.println("deleteUser: DB Connection is null");
                 return false;
             }
 
-            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, user.getId());
 
             return ps.executeUpdate() > 0;
+
         } catch (Exception e) {
             System.out.println("delete(User) error: " + e.getMessage());
             return false;
@@ -90,64 +101,18 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public Optional<User> getById(int id) {
-        String sql = "SELECT * FROM users WHERE id = ?";
-
-        try (Connection conn = DBConnection.getConnection()) {
-            if (conn == null) {
-                System.out.println("getUserById: DB Connection is null");
-                return null;
-            }
-
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return Optional.of(map(rs));
-            }
-        } catch (Exception e) {
-            System.out.println("getUserById error: " + e.getMessage());
-        }
-        return null;
-    }
-
-    @Override
-    public User getByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
-
-        try (Connection conn = DBConnection.getConnection()) {
-            if (conn == null) {
-                System.out.println("getUserByUsername: DB Connection is null");
-                return null;
-            }
-
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, username);
-
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return map(rs);
-            }
-        } catch (Exception e) {
-            System.out.println("getUserByUsername error: " + e.getMessage());
-        }
-        return null;
-    }
-
-    @Override
     public List<User> getAll() {
         List<User> list = new ArrayList<>();
         String sql = "SELECT * FROM users";
 
-        try (Connection conn = DBConnection.getConnection()) {
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+            
             if (conn == null) {
                 System.out.println("getAllUsers: DB Connection is null");
                 return list;
             }
-
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
                 list.add(map(rs));
@@ -156,6 +121,54 @@ public class UserDAOImpl implements UserDAO {
             System.out.println("getAllUsers error: " + e.getMessage());
         }
         return list;
+    }
+
+    @Override
+    public Optional<User> getById(int id) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (conn == null) {
+                System.out.println("getUserById: DB Connection is null");
+                return Optional.empty();
+            }
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return Optional.of(map(rs));
+            }
+
+        } catch (Exception e) {
+            System.out.println("getUserById error: " + e.getMessage());
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<User> getByUsername(String username) {
+        String sql = "SELECT * FROM users WHERE username = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            if (conn == null) {
+                System.out.println("getUserByUsername: DB Connection is null");
+                return Optional.empty();
+            }
+
+            ps.setString(1, username);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return Optional.of(map(rs));
+            }
+
+        } catch (Exception e) {
+            System.out.println("getUserByUsername error: " + e.getMessage());
+        }
+        return Optional.empty();
     }
 
     private User map(ResultSet rs) throws SQLException {

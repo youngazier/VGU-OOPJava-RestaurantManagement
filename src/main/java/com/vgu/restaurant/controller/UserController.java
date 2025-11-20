@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @WebServlet("/api/users/*")
 public class UserController extends HttpServlet {
@@ -132,12 +133,14 @@ public class UserController extends HttpServlet {
             return;
         }
 
-        User user = userService.login(data.username, data.password);
+        Optional<User> opt = userService.login(data.username, data.password);
 
-        if (user == null) {
+        if (opt.isEmpty()) {
             writeError(resp, "Invalid username or password");
             return;
         }
+
+        User user = opt.get();  // LẤY USER RA ĐỂ DÙNG
 
         // Save user to the current session
         req.getSession().setAttribute("user", user);

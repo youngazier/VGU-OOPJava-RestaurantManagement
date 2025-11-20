@@ -31,14 +31,14 @@ public class OrderDAOImpl implements OrderDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
 
-            if (!rs.next()) return Optional.of(map(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
 
-            Order order = map(rs);
-            order.setItems(orderItemDAO.getByOrderId(id));
-
-            return Optional.of(order);
+                Order order = map(rs);
+                order.setItems(orderItemDAO.getByOrderId(id));
+                return Optional.of(order);
+            }
 
         } catch (Exception e) {
             System.out.println("getOrderById error: " + e.getMessage());
@@ -83,7 +83,7 @@ public class OrderDAOImpl implements OrderDAO {
     }
 
     @Override
-    public List<Order> findByCustomer(int customerId) {
+    public List<Order> getByCustomer(int customerId) {
         List<Order> list = new ArrayList<>();
         String sql = "SELECT * FROM orders WHERE customerId = ?";
 
@@ -100,14 +100,14 @@ public class OrderDAOImpl implements OrderDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("findByCustomer error: " + e.getMessage());
+            System.out.println("getByCustomer error: " + e.getMessage());
         }
 
         return list;
     }
 
     @Override
-    public List<Order> findByStatus(OrderStatus status) {
+    public List<Order> getByStatus(OrderStatus status) {
         List<Order> list = new ArrayList<>();
         String sql = "SELECT * FROM orders WHERE status = ?";
 
@@ -124,7 +124,7 @@ public class OrderDAOImpl implements OrderDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("findByStatus error: " + e.getMessage());
+            System.out.println("getByStatus error: " + e.getMessage());
         }
 
         return list;

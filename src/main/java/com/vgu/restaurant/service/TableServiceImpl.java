@@ -10,7 +10,8 @@ import com.vgu.restaurant.model.TableStatus;
 import java.util.List;
 import java.util.Optional;
 
-public class TableServiceImpl {
+public class TableServiceImpl implements TableService {
+
     private final TableDAO tableDAO = TableDAOImpl.getInstance();
 
     @Override
@@ -24,13 +25,13 @@ public class TableServiceImpl {
     }
 
     @Override
-    public List<Order> getAll() {
-        return tableDAO.getAll();
+    public List<Table> getByStatus(TableStatus status) {
+        return tableDAO.getByStatus(status);
     }
 
     @Override
-    public boolean updateStatus(int tableId, TableStatus status) {
-        return tableDAO.updateStatus(tableId, status);
+    public List<Table> getAll() {
+        return tableDAO.getAll();
     }
 
     @Override
@@ -39,9 +40,16 @@ public class TableServiceImpl {
     }
 
     @Override
+    public boolean updateStatus(int tableId, TableStatus status) {
+        return tableDAO.updateStatus(tableId, status);
+    }
+
+    // chỉ xóa bàn khi ko có khách
+    @Override
     public boolean delete(int tableId) {
-        Optional<Table> table = tableDAO.getById(tableId);
-        if (table == null) return false;
-        return tableDAO.delete(table);
+        return tableDAO.getById(tableId)
+                .filter(t -> t.getStatus() == TableStatus.AVAILABLE)
+                .map(tableDAO::delete)
+                .orElse(false);
     }
 }
