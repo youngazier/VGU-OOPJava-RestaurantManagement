@@ -2,8 +2,12 @@ package com.vgu.restaurant.dao;
 
 import com.vgu.restaurant.model.*;
 
-import java.sql.*;
-import java.time.LocalDateTime;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Types;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,39 +52,65 @@ public class OrderDAOImpl implements OrderDAO {
 
     @Override
     public boolean add(Order order) {
-        String sql = "INSERT INTO orders (tableId, customerId, status, createdAt, note) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sqlOrder = "INSERT INTO orders (tableId, customerId, status, note) VALUES (?, ?, ?, ?)";
+        String sqlItem = "INSERT INTO order_items (orderId, menuItemId, price, quantity, note) VALUES (?, ?, ?, ?, ?)";
+        Connection conn = null;
 
-            ps.setInt(1, order.getTableId());
-            if (order.getCustomerId() == null) ps.setNull(2, Types.INTEGER);
-            else ps.setInt(2, order.getCustomerId());
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
 
-            ps.setString(3, order.getStatus().name());
-            ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
-            ps.setString(5, order.getNote());
+            // INSERT ORDER
+            try (PreparedStatement ps = conn.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setInt(1, order.getTableId());
+                if (order.getCustomerId() == null) ps.setNull(2, Types.INTEGER);
+                else ps.setInt(2, order.getCustomerId());
 
-            int affected = ps.executeUpdate();
-            if (affected == 0) return false;
+                ps.setString(3, order.getStatus().name());
+                ps.setString(4, order.getNote());
 
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                int orderId = rs.getInt(1);
+                if (ps.executeUpdate() == 0) {
+                    conn.rollback();
+                    return false;
+                }
 
-                for (OrderItem item : order.getItems()) {
-                    item.setOrderId(orderId);
-                    orderItemDAO.add(item);
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (!rs.next()) throw new SQLException("Cannot get generated order id");
+                    int orderId = rs.getInt(1);
+                    order.setId(orderId);
+
+                    // INSERT ITEMS
+                    try (PreparedStatement psi = conn.prepareStatement(sqlItem, Statement.RETURN_GENERATED_KEYS)) {
+                        for (OrderItem item : order.getItems()) {
+                            psi.setInt(1, orderId);
+                            psi.setInt(2, item.getMenuItemId());
+                            psi.setDouble(3, item.getPrice());
+                            psi.setInt(4, item.getQuantity());
+                            psi.setString(5, item.getNote());
+
+                            if (psi.executeUpdate() == 0) {
+                                conn.rollback();
+                                return false;
+                            }
+                        }
+                    }
                 }
             }
 
+            conn.commit();
             return true;
 
         } catch (Exception e) {
             System.out.println("addOrder error: " + e.getMessage());
+            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
             return false;
+
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(true); } catch (Exception ignored) {}
         }
     }
+
 
     @Override
     public List<Order> getByCustomer(int customerId) {
@@ -238,7 +268,6 @@ public class OrderDAOImpl implements OrderDAO {
                 (Integer) rs.getObject("customerId"),
                 new ArrayList<>(),
                 OrderStatus.valueOf(rs.getString("status")),
-                rs.getTimestamp("createdAt").toLocalDateTime(),
                 rs.getString("note")
         );
     }

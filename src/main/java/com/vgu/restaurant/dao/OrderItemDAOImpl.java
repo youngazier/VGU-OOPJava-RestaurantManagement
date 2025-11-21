@@ -32,7 +32,18 @@ public class OrderItemDAOImpl implements OrderItemDAO {
             ps.setInt(4, item.getQuantity());
             ps.setString(5, item.getNote());
 
-            return ps.executeUpdate() > 0;
+            int affected = ps.executeUpdate();
+            if (affected == 0) {
+                conn.rollback();
+                return false;
+            }
+
+            try (ResultSet key = ps.getGeneratedKeys()) {
+                if (key.next()) {
+                    item.setId(key.getInt(1));
+                }
+            }
+            return true;
 
         } catch (Exception e) {
             System.out.println("addOrderItem error: " + e.getMessage());

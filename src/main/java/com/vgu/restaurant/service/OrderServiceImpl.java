@@ -7,6 +7,7 @@ import com.vgu.restaurant.dao.OrderItemDAOImpl;
 import com.vgu.restaurant.model.Order;
 import com.vgu.restaurant.model.OrderItem;
 import com.vgu.restaurant.model.OrderStatus;
+import com.vgu.restaurant.model.TableStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,10 +16,15 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderDAO orderDAO = OrderDAOImpl.getInstance();
     private final OrderItemDAO orderItemDAO = OrderItemDAOImpl.getInstance();
+    private final TableService tableService = new TableServiceImpl();
 
     @Override
     public boolean create(Order order) {
-        return orderDAO.add(order);
+        boolean created = orderDAO.add(order);
+        if (created && order.getTableId() > 0) {
+            tableService.updateStatus(order.getTableId(), TableStatus.OCCUPIED);
+        }
+        return created;
     }
 
     @Override
@@ -59,7 +65,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public boolean updateStatus(int orderId, OrderStatus status) {
-        return orderDAO.updateStatus(orderId, status);
+        Optional<Order> existing = orderDAO.getById(orderId);
+        if (existing.isEmpty()) return false;
+
+        boolean updated = orderDAO.updateStatus(orderId, status);
+        if (updated && (status == OrderStatus.COMPLETED || status == OrderStatus.CANCELLED)) {
+            tableService.updateStatus(existing.get().getTableId(), TableStatus.AVAILABLE);
+        }
+        return updated;
     }
 
     @Override

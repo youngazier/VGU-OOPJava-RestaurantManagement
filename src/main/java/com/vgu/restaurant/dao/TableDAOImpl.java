@@ -166,6 +166,7 @@ public class TableDAOImpl implements TableDAO {
     private Table map(ResultSet rs) throws Exception {
         return new Table(
                 rs.getInt("id"),
+                rs.getInt("customerId"),
                 rs.getInt("capacity"),
                 TableStatus.valueOf(rs.getString("status"))
         );

@@ -71,7 +71,6 @@ public class TableController extends HttpServlet {
         }
 
         Table table = new Table(
-                0,
                 body.capacity,
                 TableStatus.valueOf(body.status)
         );

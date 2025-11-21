@@ -22,7 +22,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
     @Override
     public boolean add(MenuItem item){
-        String sql = "INSERT INTO MenuItem (name, description, imgUrl, cost, price, category, isAvailable) " + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO menu_items (name, description, imgUrl, cost, price, category, isAvailable) " + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBConnection.getConnection()){
             if (conn == null){
@@ -57,7 +57,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
     @Override
     public boolean update(MenuItem item) {
-        String sql = "UPDATE MenuItem SET name=?, description=?, imgUrl=?, cost=?, price=?, category=?, isAvailable=? WHERE id=?";
+        String sql = "UPDATE menu_items SET name=?, description=?, imgUrl=?, cost=?, price=?, category=?, isAvailable=? WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -84,7 +84,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
     @Override
     public boolean delete(MenuItem item) {
-        String sql = "DELETE FROM MenuItem WHERE id=?";
+        String sql = "DELETE FROM menu_items WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -105,7 +105,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
 
     public Optional<MenuItem> getById(int id) {
-        String sql = "SELECT * FROM MenuItem WHERE id=?";
+        String sql = "SELECT * FROM menu_items WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
             if (conn == null) {
@@ -128,7 +128,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
     public List<MenuItem> getAll() {
         List<MenuItem> list = new ArrayList<>();
-        String sql = "SELECT * FROM MenuItem";
+        String sql = "SELECT * FROM menu_items";
 
         try (Connection conn = DBConnection.getConnection()) {
             if (conn == null) {
@@ -150,7 +150,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
     public List<MenuItem> getByCategory(String category) {
         List<MenuItem> list = new ArrayList<>();
-        String sql = "SELECT * FROM MenuItem WHERE category = ?";
+        String sql = "SELECT * FROM menu_items WHERE category = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
             if (conn == null) {
@@ -176,7 +176,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
     }
 
     public List<MenuItem> getAvailableItems(boolean IsAvailable) {
-        String sql = "SELECT * FROM MenuItem WHERE IsAvailable =?";
+        String sql = "SELECT * FROM menu_items WHERE IsAvailable =?";
         try (Connection conn = DBConnection.getConnection()) {
             if (conn == null) {
                 System.out.println("getMenuItembyIsAvailable: DB Connection is null");
@@ -197,7 +197,7 @@ public class MenuItemDAOImpl implements MenuItemDAO {
     }
 
     public boolean setAvailability(int id, boolean available) {
-        String sql = "UPDATE MenuItem SET isAvailable = ? WHERE id = ?";
+        String sql = "UPDATE menu_items SET isAvailable = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
             

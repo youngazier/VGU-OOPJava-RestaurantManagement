@@ -19,7 +19,11 @@ public class CORSFilter implements Filter {
 
         // Allow requests from React dev server (port 3000) or production
         String origin = httpRequest.getHeader("Origin");
-        if (origin != null && (origin.contains("localhost:3000") || origin.contains("127.0.0.1:3000"))) {
+        if (origin != null && (
+            origin.contains("localhost:3000") || 
+            origin.contains("127.0.0.1:3000") ||
+            origin.contains("localhost:5173") ||
+            origin.contains("127.0.0.1:5173"))) {
             httpResponse.setHeader("Access-Control-Allow-Origin", origin);
         } else {
             // For production, you can set specific domain

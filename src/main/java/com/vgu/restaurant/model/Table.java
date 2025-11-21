@@ -16,18 +16,26 @@ public class Table {
     public Table(int id, Integer customerId, int capacity, TableStatus status) {
         this.id = id;
         this.customerId = customerId;
-        this.status = status;
         this.capacity = capacity;
+        this.status = status;
     }
 
     public Table(int customerId,int capacity, TableStatus status) {
         this.customerId = customerId;
-        this.status = status;
         this.capacity = capacity;
+        this.status = status;
+    }
+
+    public Table(int capacity, TableStatus status) {
+        this.capacity = capacity;
+        this.status = status;
     }
 
     public int getId() {return id;}
     public void setId(int id) {this.id = id;}
+
+    public Integer getCustomerId() {return customerId;}
+    public void setCustomerId(Integer customerId) {this.customerId = customerId;}
 
     public int getCapacity() {return capacity;}
     public void setCapacity(int capacity) {this.capacity = capacity;}
