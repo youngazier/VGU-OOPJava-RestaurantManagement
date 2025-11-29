@@ -1,7 +1,5 @@
 package com.vgu.restaurant.dao;
 
-import com.vgu.restaurant.model.Order;
-
 import java.util.List;
 import java.util.Optional;
 

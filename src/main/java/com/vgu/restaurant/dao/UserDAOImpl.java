@@ -25,10 +25,6 @@ public class UserDAOImpl implements UserDAO {
         String sql = "INSERT INTO users (username, password, fullName, role, phone) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection()) {
-            if (conn == null) {
-                System.out.println("addUser: DB Connection is null");
-                return false;
-            }
 
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, user.getUsername());
@@ -60,10 +56,6 @@ public class UserDAOImpl implements UserDAO {
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (conn == null) {
-                System.out.println("updateUser: DB Connection is null");
-                return false;
-            }
 
             ps.setString(1, user.getPassword());
             ps.setString(2, user.getFullName());
@@ -85,10 +77,6 @@ public class UserDAOImpl implements UserDAO {
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (conn == null) {
-                System.out.println("deleteUser: DB Connection is null");
-                return false;
-            }
 
             ps.setInt(1, user.getId());
 
@@ -108,11 +96,6 @@ public class UserDAOImpl implements UserDAO {
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery()) {
-            
-            if (conn == null) {
-                System.out.println("getAllUsers: DB Connection is null");
-                return list;
-            }
 
             while (rs.next()) {
                 list.add(map(rs));
@@ -129,10 +112,6 @@ public class UserDAOImpl implements UserDAO {
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (conn == null) {
-                System.out.println("getUserById: DB Connection is null");
-                return Optional.empty();
-            }
 
             ps.setInt(1, id);
 
@@ -153,12 +132,7 @@ public class UserDAOImpl implements UserDAO {
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            if (conn == null) {
-                System.out.println("getUserByUsername: DB Connection is null");
-                return Optional.empty();
-            }
-
+                
             ps.setString(1, username);
 
             try (ResultSet rs = ps.executeQuery()) {

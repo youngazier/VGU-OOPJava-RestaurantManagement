@@ -2,7 +2,9 @@ package com.vgu.restaurant.model;
 
 public class Customer extends User {
 
-    public Customer() {super();}
+    public Customer() {
+        super();
+    }
 
     public Customer(String username, String password, String fullName, String phone) {
         super(username, password, fullName, Role.CUSTOMER, phone);

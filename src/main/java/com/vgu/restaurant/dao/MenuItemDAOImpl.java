@@ -61,10 +61,6 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (conn == null) {
-                System.out.println("updateMenuItem: DB Connection is null");
-                return false;
-            }
 
             ps.setString(1, item.getName());
             ps.setString(2, item.getDescription());
@@ -88,10 +84,6 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (conn == null) {
-                System.out.println("deleteUser: DB Connection is null");
-                return false;
-            }
 
             ps.setInt(1, item.getId());
 
@@ -108,10 +100,6 @@ public class MenuItemDAOImpl implements MenuItemDAO {
         String sql = "SELECT * FROM menu_items WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (conn == null) {
-                System.out.println("getMenuItemById: DB Connection is null");
-                return Optional.empty();
-            }
 
             ps.setInt(1, id);
 
@@ -131,10 +119,6 @@ public class MenuItemDAOImpl implements MenuItemDAO {
         String sql = "SELECT * FROM menu_items";
 
         try (Connection conn = DBConnection.getConnection()) {
-            if (conn == null) {
-                System.out.println("getAllMenuItem: DB Connection is null");
-                return list;
-            }
 
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
@@ -153,10 +137,6 @@ public class MenuItemDAOImpl implements MenuItemDAO {
         String sql = "SELECT * FROM menu_items WHERE category = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
-            if (conn == null) {
-                System.out.println("getByCategory: DB Connection is null");
-                return list; // trả về list rỗng thay vì null
-            }
 
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, category);
@@ -178,10 +158,6 @@ public class MenuItemDAOImpl implements MenuItemDAO {
     public List<MenuItem> getAvailableItems(boolean IsAvailable) {
         String sql = "SELECT * FROM menu_items WHERE IsAvailable =?";
         try (Connection conn = DBConnection.getConnection()) {
-            if (conn == null) {
-                System.out.println("getMenuItembyIsAvailable: DB Connection is null");
-                return null;
-            }
 
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setBoolean(1, IsAvailable);
