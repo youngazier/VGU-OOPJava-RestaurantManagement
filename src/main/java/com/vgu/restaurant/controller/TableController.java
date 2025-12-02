@@ -22,10 +22,36 @@ public class TableController extends HttpServlet {
     private final TableService tableService = new TableServiceImpl();
     private final Gson gson = new Gson();
 
-    // DTO for create/update
     private static class TableRequest {
         Integer capacity;
         String status;
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
+        resp.setContentType("application/json");
+        TableRequest body = readBody(req);
+
+        if (body.capacity == null || body.status == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"error\":\"Missing fields\"}");
+            return;
+        }
+
+        Table table = new Table(
+            body.capacity,
+            TableStatus.valueOf(body.status)
+        );
+
+        boolean created = tableService.create(table);
+
+        if (created) {
+            resp.getWriter().write(gson.toJson(table));
+        } else {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("{\"error\": \"Failed to create table\"}");
+        }
     }
 
     @Override
@@ -55,33 +81,6 @@ public class TableController extends HttpServlet {
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write("{\"error\": \"Invalid table ID\"}");
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
-        resp.setContentType("application/json");
-        TableRequest body = readBody(req);
-
-        if (body.capacity == null || body.status == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Missing fields\"}");
-            return;
-        }
-
-        Table table = new Table(
-                body.capacity,
-                TableStatus.valueOf(body.status)
-        );
-
-        boolean created = tableService.create(table);
-
-        if (created) {
-            resp.getWriter().write(gson.toJson(table));
-        } else {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"error\": \"Failed to create table\"}");
         }
     }
 

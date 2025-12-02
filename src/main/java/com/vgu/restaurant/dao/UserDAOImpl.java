@@ -42,6 +42,7 @@ public class UserDAOImpl implements UserDAO {
                     user.setId(key.getInt(1));
                 }
             }
+            
             return true;
 
         } catch (Exception e) {

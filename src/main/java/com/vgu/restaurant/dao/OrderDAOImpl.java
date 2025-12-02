@@ -26,7 +26,6 @@ public class OrderDAOImpl implements OrderDAO {
 
     private final OrderItemDAO orderItemDAO = OrderItemDAOImpl.getInstance();
 
-
     @Override
     public Optional<Order> getById(int id) {
         String sql = "SELECT * FROM orders WHERE id = ?";

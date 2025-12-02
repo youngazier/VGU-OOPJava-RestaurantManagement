@@ -22,13 +22,8 @@ public class MenuItemDAOImpl implements MenuItemDAO {
 
     @Override
     public boolean add(MenuItem item){
-        String sql = "INSERT INTO menu_items (name, description, imgUrl, cost, price, category, isAvailable) " + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        
-        try (Connection conn = DBConnection.getConnection()){
-            if (conn == null){
-                System.out.println("addMenuItem: DB connection is null");
-                return false;
-            }
+        try (Connection conn = DBConnection.getConnection()) {
+            String sql = "INSERT INTO menu_items (name, description, imgUrl, cost, price, category, isAvailable) " + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, item.getName());

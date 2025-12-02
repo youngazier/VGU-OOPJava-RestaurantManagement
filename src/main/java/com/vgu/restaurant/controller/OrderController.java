@@ -104,7 +104,7 @@ public class OrderController extends HttpServlet {
 
         if (!requireRole(req, resp, Role.MANAGER, Role.WAITER, Role.CHEF)) return;
 
-        // POST /api/orders → Tạo order mới
+        // POST /api/orders
         if (path == null || path.equals("/")) {
             BufferedReader reader = req.getReader();
             Order order = gson.fromJson(reader, Order.class);

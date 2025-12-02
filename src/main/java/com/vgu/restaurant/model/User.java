@@ -10,7 +10,6 @@ public abstract class User {
     private Role role;
     private String phone;
 
-    // CONSTRUCTOR
     public User() {}
 
     // Use for retrieving from DB
@@ -50,5 +49,4 @@ public abstract class User {
 
     public String getPhone() {return phone;}
     public void setPhone(String phone) {this.phone = phone;}
-
 }

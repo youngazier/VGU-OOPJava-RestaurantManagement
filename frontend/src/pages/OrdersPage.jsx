@@ -417,7 +417,7 @@ export const OrdersPage = () => {
                                                     <tbody>
                                                         {(order.items ?? []).map((item) => (
                                                             <tr key={item.id}>
-                                                                <td>{item.menuItemId}</td>
+                                                                <td>{item.menuItemId} - {menuItems.find((m) => String(m.id) === String(item.menuItemId))?.name || item.menuItemId}</td>
                                                                 <td>${Number(item.price).toFixed(2)}</td>
                                                                 <td>
                                                                     <div className="qty-control">

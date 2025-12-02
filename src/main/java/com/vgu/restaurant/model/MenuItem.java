@@ -10,7 +10,6 @@ public class MenuItem {
     private String category;
     private boolean isAvailable;
 
-    //CONSTRUCTOR
     public MenuItem() {}
 
     public MenuItem(int id, String name, String description, String imgUrl, double cost, double price, String category, boolean isAvailable) {
@@ -34,7 +33,6 @@ public class MenuItem {
         this.isAvailable = isAvailable;
     }
 
-    // GETTER, SETTER
     public int getId() {return id;}
     public void setId(int id) {this.id = id;}
 

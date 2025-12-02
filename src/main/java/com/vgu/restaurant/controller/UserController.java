@@ -23,13 +23,12 @@ public class UserController extends HttpServlet {
     private final UserService userService = new UserServiceImpl();
     private final Gson gson = new Gson();
 
-    // JSON DTO
     private static class RegisterRequest {
         String username;
         String password;
         String fullName;
         String phone;
-        String role; // CUSTOMER, WAITER, CHEF, MANAGER
+        String role;
     }
 
     private static class LoginRequest {
